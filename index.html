@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f1eb">
+<title>명리툴</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="명리 상담에 쓰는 도구들을 한곳에 모은 앱 모음">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<style>
+  /* Layout: 상담 로거와 같은 종이·흙빛 톤. 위에서부터 오늘의 일진 → 검색/분류 → 앱 목록(앱스토어형) → 도움말 */
+  :root{
+    --bg:#f5f1eb;
+    --paper:#fffdf9;
+    --paper-2:#faf6f0;
+    --text:#3e342d;
+    --muted:#86766a;
+    --line:#e8ded3;
+    --beige:#dfd0c0;
+    --brown:#755c49;
+    --brown-dark:#594536;
+    --on-brown:#ffffff;
+    --glow:rgba(223,208,192,.34);
+    --shadow:0 12px 34px rgba(77,59,44,.08);
+    --overlay:rgba(40,30,24,.36);
+    --star:#b58a3a;
+    --tile-a:#755c49;
+    --tile-b:#5f6b4a;
+    --tile-soon:#d9cbbb;
+    --wood:#5f7d4c;
+    --fire:#b0503c;
+    --earth:#a8813a;
+    --metal:#857f7a;
+    --water:#3f5873;
+    --font-display:"Gowun Batang", "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
+    --font-body:Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1f1a17; --paper:#2a231f; --paper-2:#342b26; --text:#f2e9df; --muted:#b7a79a;
+      --line:#463a33; --beige:#7d6858; --brown:#c4a98f; --brown-dark:#d3b99f; --on-brown:#241b16;
+      --glow:rgba(126,103,85,.18); --shadow:0 14px 34px rgba(0,0,0,.24); --overlay:rgba(0,0,0,.58);
+      --star:#e5bc67; --tile-a:#8a6d57; --tile-b:#6f7c58; --tile-soon:#4a3e36;
+      --wood:#8fb07a; --fire:#e08a74; --earth:#d4ad62; --metal:#b9b2ab; --water:#8fb0d4;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1f1a17; --paper:#2a231f; --paper-2:#342b26; --text:#f2e9df; --muted:#b7a79a;
+    --line:#463a33; --beige:#7d6858; --brown:#c4a98f; --brown-dark:#d3b99f; --on-brown:#241b16;
+    --glow:rgba(126,103,85,.18); --shadow:0 14px 34px rgba(0,0,0,.24); --overlay:rgba(0,0,0,.58);
+    --star:#e5bc67; --tile-a:#8a6d57; --tile-b:#6f7c58; --tile-soon:#4a3e36;
+    --wood:#8fb07a; --fire:#e08a74; --earth:#d4ad62; --metal:#b9b2ab; --water:#8fb0d4;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html{padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px)}
+  body{
+    margin:0;
+    background:radial-gradient(circle at 0% 0%, var(--glow), transparent 38%), var(--bg);
+    background-color:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  button,input{font:inherit;color:inherit}
+  button{-webkit-tap-highlight-color:transparent}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--brown);outline-offset:2px}
+
+  .wrap{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding-block:26px 56px;
+    padding-left:max(16px, env(safe-area-inset-left, 0px));
+    padding-right:max(16px, env(safe-area-inset-right, 0px));
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* HEADER */
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:14px}
+  .brand h1{
+    margin:0;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:40px;
+    line-height:1.1;
+    letter-spacing:-.03em;
+  }
+  .brand h1 small{
+    margin-left:8px;
+    font-size:15px;
+    font-weight:400;
+    color:var(--muted);
+    letter-spacing:.18em;
+  }
+  .brand p{margin:6px 0 0;color:var(--muted);font-size:13px}
+  .round-btn{
+    width:42px;height:42px;flex:none;
+    display:grid;place-items:center;
+    border:1px solid var(--line);border-radius:50%;
+    background:var(--paper);color:var(--brown);
+    box-shadow:var(--shadow);cursor:pointer;font-size:18px;
+  }
+
+  /* TODAY */
+  .today{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:18px;
+    align-items:center;
+    padding:18px 20px;
+    border:1px solid var(--line);
+    border-radius:22px;
+    background:var(--paper);
+    box-shadow:var(--shadow);
+  }
+  .pillar{
+    display:grid;
+    grid-template-rows:1fr 1fr;
+    width:74px;
+    border:1px solid var(--beige);
+    border-radius:14px;
+    overflow:hidden;
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    background:var(--paper-2);
+  }
+  .pillar span{display:grid;place-items:center;height:52px;font-size:30px;line-height:1}
+  .pillar span + span{border-top:1px solid var(--beige)}
+  .today-info{min-width:0;display:flex;flex-direction:column;gap:4px}
+  .eyebrow{color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.08em}
+  .today-main{
+    margin:0;
+    font-family:var(--font-display);
+    font-size:24px;
+    font-weight:700;
+    letter-spacing:-.01em;
+    text-wrap:balance;
+  }
+  .today-sub{color:var(--muted);font-size:13px}
+  .elements{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .el{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 9px;border-radius:999px;
+    border:1px solid var(--line);background:var(--paper-2);
+    font-size:12px;font-weight:700;color:var(--text);
+  }
+  .el::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+  .el.wood{color:var(--wood)} .el.fire{color:var(--fire)} .el.earth{color:var(--earth)}
+  .el.metal{color:var(--metal)} .el.water{color:var(--water)}
+  .date-pick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+  .date-pick input{
+    height:34px;border:1px solid var(--line);border-radius:10px;
+    padding:0 10px;background:var(--paper-2);color:var(--text);
+  }
+  .text-btn{
+    border:0;background:transparent;padding:6px 4px;
+    color:var(--brown);font-weight:750;font-size:13px;cursor:pointer;
+  }
+
+  /* SEARCH + CHIPS */
+  .finder{display:flex;flex-direction:column;gap:10px}
+  .search{
+    width:100%;height:46px;
+    border:1px solid var(--line);border-radius:14px;
+    padding:0 14px;background:var(--paper);color:var(--text);
+    box-shadow:var(--shadow);outline:none;
+  }
+  .search:focus{border-color:var(--brown);box-shadow:0 0 0 3px rgba(117,92,73,.12)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    border:1px solid var(--line);border-radius:999px;
+    padding:7px 13px;background:var(--paper);color:var(--muted);
+    font-size:13px;font-weight:750;cursor:pointer;
+  }
+  .chip[aria-pressed="true"]{background:var(--brown);border-color:var(--brown);color:var(--on-brown)}
+
+  /* RECENT */
+  .recent{display:flex;flex-direction:column;gap:8px}
+  .section-title{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    margin:0;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.04em;
+  }
+  .recent-row{display:flex;flex-wrap:wrap;gap:8px}
+  .recent-item{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:999px;
+    background:var(--paper);text-decoration:none;font-size:13px;font-weight:700;
+  }
+  .recent-item .mini{width:26px;height:26px;border-radius:8px;font-size:14px}
+
+  /* APP LIST */
+  .apps{display:flex;flex-direction:column;gap:10px}
+  .app{
+    display:grid;
+    grid-template-columns:62px minmax(0,1fr) auto;
+    gap:14px;
+    align-items:center;
+    padding:14px 14px 14px 14px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:var(--paper);
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    transition:transform .15s ease,border-color .15s ease;
+  }
+  .app:hover{transform:translateY(-1px);border-color:var(--beige)}
+  .tile{
+    display:grid;place-items:center;
+    width:62px;height:62px;border-radius:17px;
+    background:var(--tile-a);color:var(--paper);
+    font-family:var(--font-display);font-weight:700;font-size:30px;line-height:1;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.12);
+  }
+  .tile.b{background:var(--tile-b)}
+  .tile.soon{background:var(--tile-soon);color:var(--muted);box-shadow:none}
+  .mini{display:grid;place-items:center;background:var(--tile-a);color:var(--paper);font-family:var(--font-display);font-weight:700}
+  .mini.b{background:var(--tile-b)}
+  .app-body{min-width:0}
+  .app-name{
+    margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:17px;font-weight:800;letter-spacing:-.01em;
+  }
+  .tag{
+    padding:2px 8px;border-radius:999px;background:var(--paper-2);border:1px solid var(--line);
+    color:var(--muted);font-size:11px;font-weight:750;
+  }
+  .app-line{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+  .app-actions{display:flex;align-items:center;gap:4px}
+  .star-btn{
+    width:36px;height:36px;display:grid;place-items:center;
+    border:0;border-radius:50%;background:transparent;color:var(--muted);
+    font-size:20px;cursor:pointer;
+  }
+  .star-btn[aria-pressed="true"]{color:var(--star)}
+  .open-btn{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:9px 16px;border-radius:999px;
+    background:var(--brown);color:var(--on-brown);
+    text-decoration:none;font-weight:800;font-size:14px;white-space:nowrap;
+  }
+  .open-btn:hover{background:var(--brown-dark)}
+  .soon-card{cursor:default;box-shadow:none;background:var(--paper-2);border-style:dashed}
+  .soon-card:hover{transform:none}
+  .empty{
+    padding:40px 20px;text-align:center;color:var(--muted);
+    border:1px dashed var(--beige);border-radius:20px;background:var(--paper-2);
+  }
+
+  /* HELP */
+  details.help{
+    border:1px solid var(--line);border-radius:18px;background:var(--paper);
+    padding:0 18px;
+  }
+  details.help summary{
+    cursor:pointer;list-style:none;padding:15px 0;font-weight:800;font-size:14px;
+    display:flex;justify-content:space-between;gap:10px;
+  }
+  details.help summary::-webkit-details-marker{display:none}
+  details.help summary::after{content:"+";color:var(--muted);font-weight:700}
+  details.help[open] summary::after{content:"–"}
+  .help-body{padding:0 0 16px;color:var(--muted);font-size:13px;line-height:1.75}
+  .help-body b{color:var(--text)}
+  .help-body p{margin:0 0 8px}
+
+  footer{text-align:center;color:var(--muted);font-size:11px;line-height:1.7}
+
+  /* SHEET */
+  .backdrop{
+    position:fixed;inset:0;z-index:50;
+    display:grid;place-items:end center;
+    background:var(--overlay);backdrop-filter:blur(6px);
+    padding-left:env(safe-area-inset-left, 0px);padding-right:env(safe-area-inset-right, 0px);
+  }
+  .sheet{
+    width:min(560px,100%);
+    max-height:88vh;overflow:auto;
+    border:1px solid var(--line);border-bottom:0;
+    border-radius:26px 26px 0 0;
+    background:var(--paper);
+    padding:22px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+    box-shadow:0 -12px 40px rgba(0,0,0,.18);
+    animation:up .22s ease-out;
+  }
+  @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+  @media (min-width:700px){
+    .backdrop{place-items:center}
+    .sheet{border-radius:26px;border-bottom:1px solid var(--line)}
+  }
+  .sheet-head{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:16px;align-items:center}
+  .sheet-head .tile{width:78px;height:78px;border-radius:21px;font-size:38px}
+  .sheet-head h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .sheet-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .close-btn{
+    width:36px;height:36px;border:0;border-radius:50%;
+    background:var(--paper-2);color:var(--muted);font-size:20px;cursor:pointer;align-self:start;
+  }
+  .sheet-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:18px}
+  .sheet-actions .open-btn{justify-content:center;padding:13px 16px;font-size:15px}
+  .outline-btn{
+    border:1px solid var(--beige);border-radius:999px;padding:0 16px;
+    background:var(--paper);color:var(--brown);font-weight:800;cursor:pointer;
+  }
+  .sheet h3{margin:22px 0 8px;font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.04em}
+  .sheet .desc{margin:0;line-height:1.75}
+  .feature-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+  .feature-list li{display:grid;grid-template-columns:18px 1fr;gap:6px;line-height:1.6}
+  .feature-list li::before{content:"·";color:var(--brown);font-weight:900;text-align:center}
+  .url-row{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper-2);
+  }
+  .url-row code{
+    flex:1;min-width:0;overflow-wrap:anywhere;user-select:all;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;font-size:12.5px;
+  }
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));z-index:60;
+    transform:translateX(-50%);
+    padding:10px 16px;border-radius:999px;
+    background:var(--text);color:var(--bg);font-size:13px;font-weight:700;
+    box-shadow:var(--shadow);
+  }
+
+  @media (max-width:520px){
+    .brand h1{font-size:34px}
+    .today{grid-template-columns:1fr;gap:14px}
+    .today .pillar{grid-template-rows:none;grid-template-columns:1fr 1fr;width:120px}
+    .today .pillar span + span{border-top:0;border-left:1px solid var(--beige)}
+    .app{grid-template-columns:54px minmax(0,1fr);row-gap:10px}
+    .tile{width:54px;height:54px;border-radius:15px;font-size:26px}
+    .app-actions{grid-column:1 / -1;justify-content:flex-end}
+    .soon-card .app-actions{display:none}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>명리툴<small>命理</small></h1>
+      <p>상담에 쓰는 도구를 한곳에서 골라 여세요.</p>
+    </div>
+    <button id="themeBtn" class="round-btn" type="button" aria-label="화면 밝기 전환" title="화면 밝기 전환">☾</button>
+  </header>
+
+  <section class="today" aria-labelledby="todayLabel">
+    <div class="pillar" aria-hidden="true">
+      <span id="pStem">戊</span>
+      <span id="pBranch">午</span>
+    </div>
+    <div class="today-info">
+      <span id="todayLabel" class="eyebrow">오늘의 일진</span>
+      <p id="todayMain" class="today-main">무오일 (戊午日)</p>
+      <span id="todaySub" class="today-sub">2026년 10월 18일 일요일 · 丙午년</span>
+      <div id="todayEls" class="elements"></div>
+      <div class="date-pick">
+        <label class="eyebrow" for="pickDate">다른 날짜</label>
+        <input id="pickDate" type="date">
+        <button id="todayBtn" class="text-btn" type="button" hidden>오늘로</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="finder" aria-label="앱 찾기">
+    <input id="search" class="search" type="search" placeholder="앱 이름이나 기능으로 찾기" autocomplete="off">
+    <div id="chips" class="chips" role="group" aria-label="분류"></div>
+  </section>
+
+  <section id="recent" class="recent" hidden>
+    <h2 class="section-title">최근 연 앱</h2>
+    <div id="recentRow" class="recent-row"></div>
+  </section>
+
+  <section class="apps-wrap" aria-labelledby="appsTitle">
+    <h2 id="appsTitle" class="section-title" style="margin-bottom:10px">
+      <span>앱</span><span id="appCount"></span>
+    </h2>
+    <div id="apps" class="apps"></div>
+  </section>
+
+  <details class="help" id="helpBox">
+    <summary>휴대폰 홈 화면에 명리툴 추가하기</summary>
+    <div class="help-body">
+      <p><b>아이폰 (Safari)</b> 아래쪽 공유 버튼(□↑) → <b>홈 화면에 추가</b></p>
+      <p><b>갤럭시 (Chrome)</b> 오른쪽 위 ⋮ → <b>홈 화면에 추가</b></p>
+      <p><b>삼성 인터넷</b> 아래쪽 ≡ → <b>현재 페이지 추가</b> → 홈 화면</p>
+      <p>홈 화면 아이콘을 누르면 앱처럼 바로 열립니다. 각 앱도 같은 방법으로 따로 추가할 수 있어요.</p>
+    </div>
+  </details>
+
+  <details class="help">
+    <summary>일진 계산 기준</summary>
+    <div class="help-body">
+      <p>일진은 날짜(자정 기준)로 계산합니다. 야자시·조자시를 나누어 보는 경우 밤 11시 이후는 다음 날 일진으로 보세요.</p>
+      <p>연주(年柱)는 입춘(2월 4일 무렵)을 기준으로 바뀝니다. 입춘 당일 전후는 만세력으로 한 번 더 확인해 주세요.</p>
+    </div>
+  </details>
+
+  <footer>명리툴 · 앱은 새 탭에서 열립니다</footer>
+</div>
+
+<div id="sheetBackdrop" class="backdrop" hidden>
+  <section id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetName"></section>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  /* =========================================================
+     앱 목록 — 새 앱을 추가하려면 아래 배열에 항목을 하나 더 넣으세요.
+     tone: "a"(갈색) 또는 "b"(올리브)  / glyph: 아이콘에 들어갈 한 글자
+     ========================================================= */
+  const APPS = [
+    {
+      id: "loger",
+      name: "상담 로거",
+      glyph: "錄",
+      tone: "a",
+      category: "상담·기록",
+      url: "https://zzigi79.github.io/Loger",
+      tagline: "상담 내용을 메모하듯 적고, 계정에 자동 저장",
+      desc: "상담자 이름, 성별, 연락처, 생년생시(양력·음력), 상담 금액과 특이사항을 한 장에 기록합니다. Gmail 계정으로 로그인하면 휴대폰과 컴퓨터에서 같은 기록을 볼 수 있어요.",
+      features: [
+        "상담자 생년생시(양력·음력)와 성별 기록",
+        "상담 금액 현금·카드 구분, 월별 매출 정리",
+        "다시 온 상담자는 생년생시·연락처 자동 채움",
+        "이름·내용·연락처 검색, 날짜별 찾기",
+        "엑셀 파일 내보내기와 백업·불러오기",
+        "중요 상담 별표, 다크 모드"
+      ]
+    },
+    {
+      id: "1jin",
+      name: "일진내정법",
+      glyph: "日",
+      tone: "b",
+      category: "점법",
+      url: "https://zzigi79.github.io/1jin",
+      tagline: "그날의 일진으로 일의 흐름을 살피는 내정법",
+      desc: "상담하는 날의 일진(日辰) 간지를 바탕으로 찾아온 사람의 용건과 일의 흐름을 미리 짚어보는 내정법 도구입니다.",
+      features: [
+        "날짜로 일진 간지 확인",
+        "일진을 기준으로 한 내정 풀이",
+        "상담 전에 빠르게 확인하는 간단한 화면"
+      ]
+    }
+  ];
+
+  const CATEGORIES = ["전체", ...new Set(APPS.map(a => a.category)), "즐겨찾기"];
+
+  /* ---------- 저장(이 브라우저에만) ---------- */
+  const KEY = { fav: "myeongriTool.favorites.v1", recent: "myeongriTool.recent.v1", theme: "myeongriTool.theme.v1" };
+  function load(key, fallback) {
+    try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; }
+  }
+  function store(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  }
+
+  let favorites = new Set(load(KEY.fav, []));
+  let recent = load(KEY.recent, []);
+  let category = "전체";
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+
+  /* ---------- 테마 ---------- */
+  function currentTheme() {
+    const set = document.documentElement.getAttribute("data-theme");
+    if (set) return set;
+    return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function paintThemeBtn() {
+    const dark = currentTheme() === "dark";
+    $("themeBtn").textContent = dark ? "☀" : "☾";
+  }
+  const savedTheme = load(KEY.theme, null);
+  if (savedTheme === "dark" || savedTheme === "light") document.documentElement.setAttribute("data-theme", savedTheme);
+  paintThemeBtn();
+  $("themeBtn").addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store(KEY.theme, next);
+    paintThemeBtn();
+  });
+
+  /* ---------- 일진 계산 ---------- */
+  const STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+  const STEMS_KO = ["갑","을","병","정","무","기","경","신","임","계"];
+  const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  const BRANCHES_KO = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
+  const STEM_EL = ["wood","wood","fire","fire","earth","earth","metal","metal","water","water"];
+  const BRANCH_EL = ["water","earth","wood","wood","earth","fire","fire","earth","metal","metal","earth","water"];
+  const EL_NAME = { wood:"목(木)", fire:"화(火)", earth:"토(土)", metal:"금(金)", water:"수(水)" };
+  const YINYANG = i => (i % 2 === 0 ? "양" : "음");
+  const WEEK = ["일","월","화","수","목","금","토"];
+
+  // 2000년 1월 1일 = 戊午日 (60갑자 54번째)
+  function dayIndex(y, m, d) {
+    const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2000, 0, 1)) / 86400000);
+    return ((54 + days) % 60 + 60) % 60;
+  }
+  // 입춘(2월 4일) 기준 연주
+  function yearIndex(y, m, d) {
+    const yy = (m < 2 || (m === 2 && d < 4)) ? y - 1 : y;
+    return ((yy - 4) % 60 + 60) % 60;
+  }
+  const ganji = i => ({ s: i % 10, b: i % 12 });
+
+  function localISO(date = new Date()) {
+    const off = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - off).toISOString().slice(0, 10);
+  }
+
+  function renderToday(iso) {
+    const [y, m, d] = iso.split("-").map(Number);
+    const di = ganji(dayIndex(y, m, d));
+    const yi = ganji(yearIndex(y, m, d));
+    const isToday = iso === localISO();
+    const wd = WEEK[new Date(y, m - 1, d).getDay()];
+
+    $("pStem").textContent = STEMS[di.s];
+    $("pBranch").textContent = BRANCHES[di.b];
+    $("pStem").style.color = `var(--${STEM_EL[di.s]})`;
+    $("pBranch").style.color = `var(--${BRANCH_EL[di.b]})`;
+    $("todayLabel").textContent = isToday ? "오늘의 일진" : "선택한 날의 일진";
+    $("todayMain").textContent = `${STEMS_KO[di.s]}${BRANCHES_KO[di.b]}일 (${STEMS[di.s]}${BRANCHES[di.b]}日)`;
+    $("todaySub").textContent = `${y}년 ${m}월 ${d}일 ${wd}요일 · ${STEMS[yi.s]}${BRANCHES[yi.b]}년 (${STEMS_KO[yi.s]}${BRANCHES_KO[yi.b]}년)`;
+    $("todayEls").innerHTML =
+      `<span class="el ${STEM_EL[di.s]}">일간 ${STEMS_KO[di.s]} · ${YINYANG(di.s)}${EL_NAME[STEM_EL[di.s]]}</span>` +
+      `<span class="el ${BRANCH_EL[di.b]}">일지 ${BRANCHES_KO[di.b]} · ${EL_NAME[BRANCH_EL[di.b]]}</span>`;
+    $("todayBtn").hidden = isToday;
+  }
+
+  $("pickDate").value = localISO();
+  renderToday(localISO());
+  $("pickDate").addEventListener("change", e => { if (e.target.value) renderToday(e.target.value); });
+  $("todayBtn").addEventListener("click", () => { $("pickDate").value = localISO(); renderToday(localISO()); });
+
+  /* ---------- 앱 목록 ---------- */
+  function renderChips() {
+    $("chips").innerHTML = CATEGORIES.map(c =>
+      `<button type="button" class="chip" data-cat="${esc(c)}" aria-pressed="${c === category}">${c === "즐겨찾기" ? "★ " : ""}${esc(c)}</button>`
+    ).join("");
+  }
+
+  function matches(app, q) {
+    if (!q) return true;
+    const hay = [app.name, app.tagline, app.desc, app.category, ...app.features].join(" ").toLowerCase();
+    return hay.includes(q);
+  }
+
+  function renderApps() {
+    const q = $("search").value.trim().toLowerCase();
+    const list = APPS
+      .filter(a => category === "전체" || (category === "즐겨찾기" ? favorites.has(a.id) : a.category === category))
+      .filter(a => matches(a, q))
+      .sort((a, b) => (favorites.has(b.id) - favorites.has(a.id)));
+
+    $("appCount").textContent = `${list.length}개`;
+
+    let html = list.map(a => `
+      <article class="app" data-id="${esc(a.id)}" tabindex="0" aria-label="${esc(a.name)} 자세히 보기">
+        <div class="tile ${a.tone === "b" ? "b" : ""}" aria-hidden="true">${esc(a.glyph)}</div>
+        <div class="app-body">
+          <h3 class="app-name">${esc(a.name)} <span class="tag">${esc(a.category)}</span></h3>
+          <p class="app-line">${esc(a.tagline)}</p>
+        </div>
+        <div class="app-actions">
+          <button class="star-btn" type="button" data-star="${esc(a.id)}" aria-pressed="${favorites.has(a.id)}"
+            aria-label="${esc(a.name)} 즐겨찾기" title="즐겨찾기">${favorites.has(a.id) ? "★" : "☆"}</button>
+          <a class="open-btn" href="${esc(a.url)}" target="_blank" rel="noopener" data-open="${esc(a.id)}">열기 ↗</a>
+        </div>
+      </article>`).join("");
+
+    if (!list.length) {
+      html = category === "즐겨찾기" && !q
+        ? `<div class="empty">아직 즐겨찾기한 앱이 없어요.<br>앱 옆의 ☆을 누르면 여기에 모입니다.</div>`
+        : `<div class="empty">“${esc($("search").value.trim())}”에 맞는 앱이 없어요.</div>`;
+    }
+    $("apps").innerHTML = html;
+  }
+
+  function renderRecent() {
+    const items = recent.map(r => APPS.find(a => a.id === r)).filter(Boolean).slice(0, 4);
+    $("recent").hidden = !items.length;
+    $("recentRow").innerHTML = items.map(a => `
+      <a class="recent-item" href="${esc(a.url)}" target="_blank" rel="noopener" data-open="${esc(a.id)}">
+        <span class="mini ${a.tone === "b" ? "b" : ""}" aria-hidden="true">${esc(a.glyph)}</span>${esc(a.name)}
+      </a>`).join("");
+  }
+
+  function markOpened(id) {
+    recent = [id, ...recent.filter(r => r !== id)].slice(0, 6);
+    store(KEY.recent, recent);
+    setTimeout(renderRecent, 150);
+  }
+
+  function toggleFav(id) {
+    favorites.has(id) ? favorites.delete(id) : favorites.add(id);
+    store(KEY.fav, [...favorites]);
+    const app = APPS.find(a => a.id === id);
+    toast(favorites.has(id) ? `${app.name}을(를) 즐겨찾기에 넣었어요` : `즐겨찾기에서 뺐어요`);
+    renderApps();
+    if (!$("sheetBackdrop").hidden) openSheet(id);
+  }
+
+  /* ---------- 상세 시트 ---------- */
+  let lastFocus = null;
+  function openSheet(id) {
+    const a = APPS.find(x => x.id === id);
+    if (!a) return;
+    if ($("sheetBackdrop").hidden) lastFocus = document.activeElement;
+    const fav = favorites.has(a.id);
+    $("sheet").innerHTML = `
+      <div class="sheet-head">
+        <div class="tile ${a.tone === "b" ? "b" : ""}" aria-hidden="true">${esc(a.glyph)}</div>
+        <div style="min-width:0">
+          <h2 id="sheetName">${esc(a.name)}</h2>
+          <p>${esc(a.category)} · ${esc(a.tagline)}</p>
+        </div>
+        <button class="close-btn" type="button" data-close aria-label="닫기">×</button>
+      </div>
+      <div class="sheet-actions">
+        <a class="open-btn" href="${esc(a.url)}" target="_blank" rel="noopener" data-open="${esc(a.id)}">새 탭에서 열기 ↗</a>
+        <button class="outline-btn" type="button" data-star="${esc(a.id)}" aria-pressed="${fav}">${fav ? "★ 즐겨찾기됨" : "☆ 즐겨찾기"}</button>
+      </div>
+      <h3>소개</h3>
+      <p class="desc">${esc(a.desc)}</p>
+      <h3>주요 기능</h3>
+      <ul class="feature-list">${a.features.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
+      <h3>주소</h3>
+      <div class="url-row">
+        <code id="sheetUrl">${esc(a.url)}</code>
+        <button class="outline-btn" type="button" data-copy="${esc(a.url)}" style="height:34px">복사</button>
+      </div>`;
+    $("sheetBackdrop").hidden = false;
+    $("sheet").querySelector("[data-close]").focus();
+  }
+  function closeSheet() {
+    $("sheetBackdrop").hidden = true;
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  /* ---------- 알림 ---------- */
+  let toastTimer;
+  function toast(msg) {
+    $("toast").textContent = msg;
+    $("toast").hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { $("toast").hidden = true; }, 1800);
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("주소를 복사했어요");
+    } catch {
+      const el = $("sheetUrl");
+      if (el) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      }
+      toast("주소를 선택했어요. 길게 눌러 복사하세요");
+    }
+  }
+
+  /* ---------- 이벤트 ---------- */
+  document.addEventListener("click", e => {
+    const open = e.target.closest("[data-open]");
+    if (open) { markOpened(open.dataset.open); return; }
+
+    const star = e.target.closest("[data-star]");
+    if (star) { e.stopPropagation(); toggleFav(star.dataset.star); return; }
+
+    const copy = e.target.closest("[data-copy]");
+    if (copy) { copyText(copy.dataset.copy); return; }
+
+    if (e.target.closest("[data-close]") || e.target === $("sheetBackdrop")) { closeSheet(); return; }
+
+    const chip = e.target.closest("[data-cat]");
+    if (chip) { category = chip.dataset.cat; renderChips(); renderApps(); return; }
+
+    const card = e.target.closest(".app[data-id]");
+    if (card) openSheet(card.dataset.id);
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !$("sheetBackdrop").hidden) closeSheet();
+    const card = e.target.closest && e.target.closest(".app[data-id]");
+    if (card && e.target === card && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      openSheet(card.dataset.id);
+    }
+  });
+
+  $("search").addEventListener("input", renderApps);
+
+  renderChips();
+  renderApps();
+  renderRecent();
+})();
+</script>
+</body>
+</html>
